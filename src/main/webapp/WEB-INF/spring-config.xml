@@ -1,0 +1,46 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/tx 
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+         http://www.springframework.org/schema/mvc 
+         http://www.springframework.org/schema/mvc/spring-mvc.xsd 
+         http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context.xsd 
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd">
+
+	<beans:bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<beans:property name="driverClassName" value="org.h2.Driver" />
+		<beans:property name="url"
+			value="jdbc:h2:tcp://localhost/~/mysocialnetwork" />
+		<beans:property name="username" value="sa" />
+		<beans:property name="password" value="" />
+	</beans:bean>
+	<http auto-config="true">
+		<intercept-url pattern="/admin/**" access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/user/**" access="hasRole('ROLE_USER')" />
+
+		<form-login login-page='/loginPage' default-target-url="/"
+			login-processing-url="/perform_login" authentication-failure-url="/login?error"
+			username-parameter="username" password-parameter="password" />
+		<logout logout-url="/perform_logout" delete-cookies="true"
+			logout-success-url="/login?logout" />
+		<csrf disabled="true" />
+	</http>
+	<authentication-manager>
+		<authentication-provider>
+			<jdbc-user-service data-source-ref="dataSource"
+				users-by-username-query="select userName , password,enabled  from Authentication where userName=?"
+				authorities-by-username-query="select u1.userName , u2.roleName from Authentication u1 , Authorization u2 where u1.userName=u2.userName and u1.userName=?" />
+
+		</authentication-provider>
+	</authentication-manager>
+</beans:beans>
